@@ -47,8 +47,8 @@ public class Monaco : Control
             {
                 var html = reader.ReadToEnd();
                 html = html.Replace("#backcolor", $"#{BackColor.R:X2}{BackColor.G:X2}{BackColor.B:X2}");
-                html = html.Replace("#loadingfont", $"'{Font.Name}'");
                 html = html.Replace("#loadingfontsize", $"{Font.Size}pt");
+                html = html.Replace("#loadingfont", $"'{Font.Name}'");
 
 #if DEBUG
                 var url = Path.ChangeExtension(Path.GetTempFileName(), ".html");
