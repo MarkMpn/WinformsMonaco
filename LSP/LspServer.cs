@@ -26,7 +26,8 @@ namespace LSP
                 {
                     TextDocumentSync = 1,
                     CompletionProvider = new CompletionOptions { TriggerCharacters = new[] { ".", "\"" } },
-                    HoverProvider = true
+                    HoverProvider = true,
+                    DocumentFormattingProvider = true,
                 }
             });
         }
@@ -61,6 +62,25 @@ namespace LSP
                     new MarkedString { Language = "javascript", Value = "console.log()" },
                 }
             });
+        }
+
+        [JsonRpcMethod("textDocument/formatting", UseSingleObjectParameterDeserialization = true)]
+        public Task<TextEdit[]> FormatAsync(DocumentFormattingParams @params)
+        {
+            var edits = new[]
+            {
+                new TextEdit
+                {
+                    Range = new Model.Range
+                    {
+                        Start = new Position { Line = 0, Character = 0 },
+                        End = new Position { Line = 0, Character = 1000 }
+                    },
+                    NewText = "// formatted output\n" + "// " + DateTime.UtcNow
+                }
+            };
+
+            return Task.FromResult(edits);
         }
 
         public void SendDiagnostics(string uri)

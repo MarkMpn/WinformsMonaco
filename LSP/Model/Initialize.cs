@@ -85,6 +85,9 @@ namespace LSP.Model
 
         [JsonProperty("hoverProvider")]
         public bool? HoverProvider { get; set; }
+
+        [JsonProperty("documentFormattingProvider")]
+        public bool DocumentFormattingProvider { get; set; }
     }
 
     public class CompletionOptions

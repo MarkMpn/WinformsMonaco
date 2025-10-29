@@ -72,6 +72,16 @@
                 return JSON.parse(resultJson);
             };
 
+            const sendLspNotification = async function (method, params) {
+                const request = {
+                    "jsonrpc": "2.0",
+                    "method": method,
+                    "params": params
+                };
+
+                await window.chrome.webview.hostObjects.lspTransport.SendNotification(JSON.stringify(request));
+            };
+
             //
             // LSP integration
             //
@@ -156,6 +166,33 @@
                         }
                     });
                 }
+
+                if (initializeResult?.capabilities?.documentFormattingProvider) {
+                    monaco.languages.registerDocumentFormattingEditProvider(language, {
+                        provideDocumentFormattingEdits: async function (model, options, token) {
+                            const result = await sendLspRequest("textDocument/formatting", {
+                                textDocument: { uri: getUri() },
+                                options: {
+                                    tabSize: options.tabSize,
+                                    insertSpaces: options.insertSpaces
+                                }
+                            });
+
+                            return result.map(edit => {
+                                return {
+                                    range: new monaco.Range(
+                                        edit.range.start.line + 1,
+                                        edit.range.start.character + 1,
+                                        edit.range.end.line + 1,
+                                        edit.range.end.character + 1),
+                                    text: edit.newText
+                                };
+                            });
+                        }
+                    });
+                }
+
+                await sendLspNotification("initialized", {});
             };
 
             window.lspClient = {

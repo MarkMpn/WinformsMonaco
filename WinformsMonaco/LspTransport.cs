@@ -43,5 +43,17 @@ namespace WinformsMonaco
             var response = await rpcClient.InvokeWithParameterObjectAsync<object>(message.Method, message.Arguments).ConfigureAwait(false);
             return JsonConvert.SerializeObject(response);
         }
+
+        public async Task SendNotification(string jsonRpcMessage)
+        {
+            var language = _monaco.Language;
+            if (!_languageClients.TryGetValue(language, out var rpcClient))
+            {
+                throw new InvalidOperationException($"No LSP server registered for language '{language}'.");
+            }
+
+            var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
+            await rpcClient.NotifyWithParameterObjectAsync(message.Method, message.Arguments).ConfigureAwait(false);
+        }
     }
 }
