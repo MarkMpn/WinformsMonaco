@@ -16,6 +16,7 @@ public class Monaco : Control
     private bool _navigationCompleted;
     private string? _text;
     private string? _language;
+    private string? _uri;
 
     public Monaco()
     {
@@ -106,6 +107,18 @@ public class Monaco : Control
 
             if (_ready)
                 _webView.ExecuteScriptAsync($"monaco.editor.setModelLanguage(editor.getModel(), {JsonSerializer.Serialize(value)});").ExecuteSync();
+        }
+    }
+
+    public string Uri
+    {
+        get => _uri ?? $"inmemory://model/{GetHashCode()}.{Language}";
+        set
+        {
+            _uri = value;
+
+            if (_ready)
+                _webView.ExecuteScriptAsync($"newModel({JsonSerializer.Serialize(_uri)}, {JsonSerializer.Serialize(Language)}, {JsonSerializer.Serialize(Text)});").ExecuteSync();
         }
     }
 

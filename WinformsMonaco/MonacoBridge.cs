@@ -24,4 +24,9 @@ public class MonacoBridge
     {
         return _monaco.Language;
     }
+
+    public string GetUri()
+    {
+        return _monaco.Uri;
+    }
 }
