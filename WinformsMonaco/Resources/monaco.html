@@ -197,35 +197,55 @@
                     const model = editor.getModel();
 
                     model.onDidChangeContent(async (e) => {
-                        await sendLspNotification("textDocument/didChange", {
-                            textDocument: {
-                                uri: getUri(),
-                                version: editor.getModel().getVersionId()
-                            },
-                            contentChanges: [
-                                {
-                                    text: editor.getModel().getValue()
-                                }
-                            ]
+                        if (initializeResult?.capabilities?.textDocumentSync?.change === 1) {
+                            // Full sync
+                            await sendLspNotification("textDocument/didChange", {
+                                textDocument: {
+                                    uri: getUri(),
+                                    version: editor.getModel().getVersionId()
+                                },
+                                contentChanges: [
+                                    {
+                                        text: editor.getModel().getValue()
+                                    }
+                                ]
+                            });
+                        } else if (initializeResult?.capabilities?.textDocumentSync?.change === 2) {
+                            // Incremental sync
+                            await sendLspNotification("textDocument/didChange", {
+                                textDocument: {
+                                    uri: getUri(),
+                                    version: editor.getModel().getVersionId()
+                                },
+                                contentChanges: e.changes.map(change => ({
+                                    range: {
+                                        start: { line: change.range.startLineNumber - 1, character: change.range.startColumn - 1 },
+                                        end: { line: change.range.endLineNumber - 1, character: change.range.endColumn - 1 }
+                                    },
+                                    text: change.text
+                                }))
+                            });
+                        }
+                    });
+
+                    if (initializeResult?.capabilities?.textDocumentSync?.openClose) {
+                        model.onDidSave(async () => {
+                            const params = {
+                                textDocument: { uri: getUri() },
+                                text: initializeResult?.capabilities?.textDocumentSync?.save?.includeText ? model.getValue() : undefined
+                            };
+
+                            await sendLspNotification("textDocument/didSave", params);
                         });
-                    });
 
-                    model.onDidSave(async () => {
-                        const params = {
-                            textDocument: { uri: getUri() },
-                            text: model.getValue()
-                        };
+                        model.onDidDispose(async () => {
+                            const params = {
+                                textDocument: { uri: model.uri.toString() }
+                            };
 
-                        await sendLspNotification("textDocument/didSave", params);
-                    });
-
-                    model.onDidDispose(async () => {
-                        const params = {
-                            textDocument: { uri: model.uri.toString() }
-                        };
-
-                        await sendLspNotification("textDocument/didClose", params);
-                    });
+                            await sendLspNotification("textDocument/didClose", params);
+                        });
+                    }
 
                     // Send the initial open notification
                     await sendLspNotification("textDocument/didOpen", {

@@ -18,6 +18,9 @@ namespace LSP.Model
 
     public class TextDocumentContentChangeEvent
     {
+        [JsonProperty("range")]
+        public Range Range { get; set; }
+
         [JsonProperty("text")]
         public string Text { get; set; }
     }

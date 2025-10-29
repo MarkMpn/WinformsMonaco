@@ -27,7 +27,7 @@ namespace LSP
                     TextDocumentSync = new TextDocumentSyncOptions
                     {
                         OpenClose = true,
-                        Change = 1,
+                        Change = 2,
                         Save = new SaveOptions { IncludeText = true }
                     },
                     CompletionProvider = new CompletionOptions { TriggerCharacters = new[] { ".", "\"" } },
