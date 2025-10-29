@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\LSP\LSP.csproj" />
     <ProjectReference Include="..\..\WinformsMonaco\WinformsMonaco.csproj" />
   </ItemGroup>
 

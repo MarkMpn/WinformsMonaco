@@ -45,6 +45,142 @@
                 const loading = document.getElementById('loading');
                 loading.parentElement.removeChild(loading);
             });
+
+            const getUri = function () {
+                return editor.getModel().uri.toString();
+            };
+
+            window.setUri = function (uri) {
+                const oldModel = editor.getModel();
+                const newUri = monaco.Uri.parse(uri);
+                const newModel = monaco.editor.createModel(
+                    oldModel.getValue(),
+                    oldModel.getLanguageId(),
+                    newUri);
+                editor.setModel(newModel);
+                oldModel.dispose();
+            }
+
+            const sendLspRequest = async function (method, params) {
+                const request = {
+                    "jsonrpc": "2.0",
+                    "method": method,
+                    "params": params
+                };
+
+                const resultJson = await window.chrome.webview.hostObjects.lspTransport.SendRequest(JSON.stringify(request));
+                return JSON.parse(resultJson);
+            };
+
+            //
+            // LSP integration
+            //
+            window.registerLsp = async function (language) {
+
+                // Initialize the LSP
+                const initializeResult = await sendLspRequest("initialize", {
+                    processId: null,
+                    clientInfo: { name: "MarkMpn.WinformsMonaco", version: "1.0" },
+                    rootUri: null,
+                    capabilities: {
+                        textDocument: {
+                            completion: {
+                                completionItem: {
+                                    snippetSupport: true
+                                }
+                            },
+                            hover: {},
+                        },
+                        workspace: {}
+                    },
+                    workspaceFolders: null
+                });
+
+                const triggerChars = initializeResult?.capabilities?.completionProvider?.triggerCharacters || [];
+
+                if (triggerChars) {
+                    monaco.languages.registerCompletionItemProvider(language, {
+                        triggerCharacters: triggerChars,
+                        provideCompletionItems: async function (model, position, context, token) {
+                            const result = await sendLspRequest("textDocument/completion", {
+                                textDocument: { uri: getUri() },
+                                position: {
+                                    line: position.lineNumber - 1,
+                                    character: position.column - 1
+                                },
+                                context: {
+                                    triggerKind: context.triggerKind,
+                                    triggerCharacter: context.triggerCharacter
+                                }
+                            });
+
+                            const items = result.items || [];
+
+                            return {
+                                suggestions: items.map(item => {
+                                    return {
+                                        label: item.label,
+                                        kind: monaco.languages.CompletionItemKind[item.kind] || monaco.languages.CompletionItemKind.Text,
+                                        insertText: item.insertText || item.label,
+                                        documentation: item.documentation,
+                                        detail: item.detail,
+                                        sortText: item.sortText,
+                                        filterText: item.filterText,
+                                        range: undefined
+                                    };
+                                })
+                            };
+                        }
+                    });
+                }
+
+                if (initializeResult?.capabilities?.hoverProvider) {
+                    monaco.languages.registerHoverProvider(language, {
+                        provideHover: async function (model, position, token) {
+                            const result = sendLspRequest("textDocument/hover", {
+                                textDocument: { uri: getUri() },
+                                position: {
+                                    line: position.lineNumber - 1,
+                                    character: position.column - 1
+                                }
+                            });
+
+                            if (!result || !result.contents)
+                                return null;
+
+                            return {
+                                contents: Array.isArray(result.contents)
+                                    ? result.contents.map(c => ({ value: typeof c === 'string' ? c : c.value }))
+                                    : [{ value: typeof result.contents === 'string' ? result.contents : result.contents.value }]
+                            };
+                        }
+                    });
+                }
+            };
+
+            window.lspClient = {
+                handleNotification: function (method, params) {
+                    if (method === "textDocument/publishDiagnostics") {
+                        const { uri, diagnostics } = params;
+
+                        const model = monaco.editor.getModels().find(m => m.uri.toString() === uri);
+                        if (!model) return;
+
+                        monaco.editor.setModelMarkers(
+                            model,
+                            'lsp',
+                            params.diagnostics.map(d => ({
+                                startLineNumber: d.range.start.line + 1,
+                                startColumn: d.range.start.character + 1,
+                                endLineNumber: d.range.end.line + 1,
+                                endColumn: d.range.end.character + 1,
+                                message: d.message,
+                                severity: monaco.MarkerSeverity[d.severity] || monaco.MarkerSeverity.Info
+                            }))
+                        );
+                    }
+                }
+            };
         });
     </script>
 </body>

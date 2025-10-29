@@ -3,13 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.11.35327.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinformsMonaco", "WinformsMonaco\WinformsMonaco.csproj", "{69C08114-5714-434A-85EF-4A748B1B0653}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WinformsMonaco", "WinformsMonaco\WinformsMonaco.csproj", "{69C08114-5714-434A-85EF-4A748B1B0653}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetFX", "TestApps\NetFX\NetFX.csproj", "{645C9AF9-2D6B-485F-BB88-8D9DBCC34CEA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestApps", "TestApps", "{1A0D2A33-E983-4F70-8B53-A22748491F74}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NetCore", "TestApps\NetCore\NetCore.csproj", "{F3B0155F-5290-4B0B-A490-4E4C922003AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NetCore", "TestApps\NetCore\NetCore.csproj", "{F3B0155F-5290-4B0B-A490-4E4C922003AC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LSP", "LSP\LSP.csproj", "{37AFB87E-2045-4703-8A9D-F4F4E555921E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +31,10 @@ Global
 		{F3B0155F-5290-4B0B-A490-4E4C922003AC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3B0155F-5290-4B0B-A490-4E4C922003AC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3B0155F-5290-4B0B-A490-4E4C922003AC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37AFB87E-2045-4703-8A9D-F4F4E555921E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37AFB87E-2045-4703-8A9D-F4F4E555921E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37AFB87E-2045-4703-8A9D-F4F4E555921E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37AFB87E-2045-4703-8A9D-F4F4E555921E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -36,6 +42,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{645C9AF9-2D6B-485F-BB88-8D9DBCC34CEA} = {1A0D2A33-E983-4F70-8B53-A22748491F74}
 		{F3B0155F-5290-4B0B-A490-4E4C922003AC} = {1A0D2A33-E983-4F70-8B53-A22748491F74}
+		{37AFB87E-2045-4703-8A9D-F4F4E555921E} = {1A0D2A33-E983-4F70-8B53-A22748491F74}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0D3BDD73-92D2-4012-8FA9-E10F1FE12E8B}

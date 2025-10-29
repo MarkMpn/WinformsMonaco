@@ -33,11 +33,13 @@
             getTextButton = new Button();
             setLangButton = new Button();
             bodyPanel = new Panel();
+            addLspButton = new Button();
             topPanel.SuspendLayout();
             SuspendLayout();
             // 
             // topPanel
             // 
+            topPanel.Controls.Add(addLspButton);
             topPanel.Controls.Add(setTextButton);
             topPanel.Controls.Add(getTextButton);
             topPanel.Controls.Add(setLangButton);
@@ -85,6 +87,16 @@
             bodyPanel.Size = new Size(800, 398);
             bodyPanel.TabIndex = 0;
             // 
+            // addLspButton
+            // 
+            addLspButton.Location = new Point(255, 12);
+            addLspButton.Name = "addLspButton";
+            addLspButton.Size = new Size(75, 23);
+            addLspButton.TabIndex = 3;
+            addLspButton.Text = "Add LSP";
+            addLspButton.UseVisualStyleBackColor = true;
+            addLspButton.Click += addLspButton_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -105,5 +117,6 @@
         private Button getTextButton;
         private Button setLangButton;
         private Panel bodyPanel;
+        private Button addLspButton;
     }
 }

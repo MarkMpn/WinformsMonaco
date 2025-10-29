@@ -1,6 +1,8 @@
 ﻿using System.Reflection;
 using System.Text.Json;
 using Microsoft.Web.WebView2.WinForms;
+using Newtonsoft.Json.Linq;
+using StreamJsonRpc;
 
 namespace WinformsMonaco;
 
@@ -8,6 +10,7 @@ public class Monaco : Control
 {
     private readonly WebView2 _webView;
     private readonly MonacoBridge _bridge;
+    private readonly LspTransport _lspTransport;
 
     private bool _ready;
     private bool _navigationCompleted;
@@ -23,6 +26,7 @@ public class Monaco : Control
         Controls.Add(_webView);
 
         _bridge = new MonacoBridge(this);
+        _lspTransport = new LspTransport(this);
 
         _webView.CoreWebView2InitializationCompleted += (s, e) =>
         {
@@ -35,6 +39,7 @@ public class Monaco : Control
             _ready = true;
 
             _webView.CoreWebView2.AddHostObjectToScript("monacoBridge", _bridge);
+            _webView.CoreWebView2.AddHostObjectToScript("lspTransport", _lspTransport);
 
             using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("WinformsMonaco.Resources.monaco.html"))
             using (var reader = new StreamReader(stream))
@@ -43,7 +48,14 @@ public class Monaco : Control
                 html = html.Replace("#backcolor", $"#{BackColor.R:X2}{BackColor.G:X2}{BackColor.B:X2}");
                 html = html.Replace("#loadingfont", $"'{Font.Name}'");
                 html = html.Replace("#loadingfontsize", $"{Font.Size}pt");
+
+#if DEBUG
+                var url = Path.ChangeExtension(Path.GetTempFileName(), ".html");
+                File.WriteAllText(url, html);
+                _webView.CoreWebView2.Navigate(url);
+#else
                 _webView.NavigateToString(html);
+#endif
             }
         };
 
@@ -113,5 +125,35 @@ public class Monaco : Control
             LineAlignment = StringAlignment.Center
         };
         e.Graphics.DrawString("Loading Monaco Editor...", Font, SystemBrushes.ControlText, e.ClipRectangle, sf);
+    }
+
+    public void RegisterLanguageServerProvider(string language, Stream clientStream)
+    {
+        var rpcClient = new JsonRpc(clientStream, clientStream);
+
+        // Forward any notifications on to the javascript
+        rpcClient.AddLocalRpcMethod("textDocument/publishDiagnostics", (Action<JObject>)((parameters) =>
+        {
+            InvokeIfRequired(() =>
+            {
+                _webView.ExecuteScriptAsync($"lspClient.handleNotification('textDocument/publishDiagnostics', {parameters.ToString()})");
+            });
+        }));
+
+        rpcClient.StartListening();
+
+        rpcClient.TraceSource.Switch.Level = System.Diagnostics.SourceLevels.All;
+        rpcClient.TraceSource.Listeners.Add(new System.Diagnostics.ConsoleTraceListener());
+
+        _lspTransport.RegisterLanguageServerProvider(language, rpcClient);
+        _webView.ExecuteScriptAsync($"registerLsp({JsonSerializer.Serialize(language)});").ExecuteSync();
+    }
+
+    private void InvokeIfRequired(Action action)
+    {
+        if (InvokeRequired)
+            Invoke(action);
+        else
+            action();
     }
 }

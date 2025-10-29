@@ -19,6 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.3537.50" />
     <PackageReference Include="System.Text.Json" Version="9.0.10" />
+    <PackageReference Include="StreamJsonRpc" Version="2.22.23" />
   </ItemGroup>
 
 </Project>

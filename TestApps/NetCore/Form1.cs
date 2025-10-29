@@ -1,3 +1,6 @@
+using LSP;
+using Nerdbank.Streams;
+using StreamJsonRpc;
 using WinformsMonaco;
 
 namespace NetCore
@@ -32,6 +35,13 @@ namespace NetCore
         private void setLangButton_Click(object sender, EventArgs e)
         {
             _monaco.Language = "sql";
+        }
+
+        private void addLspButton_Click(object sender, EventArgs e)
+        {
+            var (clientStream, serverStream) = FullDuplexStream.CreatePair();
+            var rpcServer = new LspServer(serverStream);
+            _monaco.RegisterLanguageServerProvider(_monaco.Language, clientStream);
         }
     }
 }
