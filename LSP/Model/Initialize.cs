@@ -78,7 +78,7 @@ namespace LSP.Model
     public class ServerCapabilities
     {
         [JsonProperty("textDocumentSync")]
-        public int? TextDocumentSync { get; set; }
+        public TextDocumentSyncOptions TextDocumentSync { get; set; }
 
         [JsonProperty("completionProvider")]
         public CompletionOptions CompletionProvider { get; set; }
@@ -94,5 +94,23 @@ namespace LSP.Model
     {
         [JsonProperty("triggerCharacters")]
         public string[] TriggerCharacters { get; set; }
+    }
+
+    public class TextDocumentSyncOptions
+    {
+        [JsonProperty("openClose")]
+        public bool OpenClose { get; set; }
+
+        [JsonProperty("change")]
+        public int Change { get; set; } // 1 = Full, 2 = Incremental
+
+        [JsonProperty("save")]
+        public SaveOptions Save { get; set; }
+    }
+
+    public class SaveOptions
+    {
+        [JsonProperty("includeText")]
+        public bool IncludeText { get; set; }
     }
 }

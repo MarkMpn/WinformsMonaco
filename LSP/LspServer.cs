@@ -24,7 +24,12 @@ namespace LSP
             {
                 Capabilities = new ServerCapabilities
                 {
-                    TextDocumentSync = 1,
+                    TextDocumentSync = new TextDocumentSyncOptions
+                    {
+                        OpenClose = true,
+                        Change = 1,
+                        Save = new SaveOptions { IncludeText = true }
+                    },
                     CompletionProvider = new CompletionOptions { TriggerCharacters = new[] { ".", "\"" } },
                     HoverProvider = true,
                     DocumentFormattingProvider = true,
@@ -47,8 +52,6 @@ namespace LSP
                     InsertText = "log()"
                 }
             };
-
-            SendDiagnostics(@params.TextDocument.Uri);
 
             return Task.FromResult(new CompletionList { Items = items });
         }
@@ -99,6 +102,29 @@ namespace LSP
                     }
                 }
             });
+        }
+
+        [JsonRpcMethod("textDocument/didChange", UseSingleObjectParameterDeserialization = true)]
+        public Task DidChangeAsync(DidChangeTextDocumentParams @params)
+        {
+            SendDiagnostics(@params.TextDocument.Uri);
+
+            // Update internal state, re-run diagnostics, etc.
+            return Task.CompletedTask;
+        }
+
+        [JsonRpcMethod("textDocument/didSave", UseSingleObjectParameterDeserialization = true)]
+        public Task DidSaveAsync(DidSaveTextDocumentParams @params)
+        {
+            // Trigger formatting, linting, etc.
+            return Task.CompletedTask;
+        }
+
+        [JsonRpcMethod("textDocument/didClose", UseSingleObjectParameterDeserialization = true)]
+        public Task DidCloseAsync(DidCloseTextDocumentParams @params)
+        {
+            // Clean up resources or diagnostics
+            return Task.CompletedTask;
         }
     }
 }

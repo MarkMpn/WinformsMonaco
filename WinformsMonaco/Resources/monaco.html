@@ -33,6 +33,7 @@
             // Get the value and language that have been set in .NET before the editor has loaded
             const value = await window.chrome.webview.hostObjects.monacoBridge.GetInitValue();
             const language = await window.chrome.webview.hostObjects.monacoBridge.GetLanguage();
+            //const uri = await window.chrome.webview.hostObjects.monacoBridge.GetUri();
 
             window.editor = monaco.editor.create(document.getElementById('container'), {
                 value: value,
@@ -188,6 +189,51 @@
                                     text: edit.newText
                                 };
                             });
+                        }
+                    });
+                }
+
+                if (initializeResult?.capabilities?.textDocumentSync) {
+                    const model = editor.getModel();
+
+                    model.onDidChangeContent(async (e) => {
+                        await sendLspNotification("textDocument/didChange", {
+                            textDocument: {
+                                uri: getUri(),
+                                version: editor.getModel().getVersionId()
+                            },
+                            contentChanges: [
+                                {
+                                    text: editor.getModel().getValue()
+                                }
+                            ]
+                        });
+                    });
+
+                    model.onDidSave(async () => {
+                        const params = {
+                            textDocument: { uri: getUri() },
+                            text: model.getValue()
+                        };
+
+                        await sendLspNotification("textDocument/didSave", params);
+                    });
+
+                    model.onDidDispose(async () => {
+                        const params = {
+                            textDocument: { uri: model.uri.toString() }
+                        };
+
+                        await sendLspNotification("textDocument/didClose", params);
+                    });
+
+                    // Send the initial open notification
+                    await sendLspNotification("textDocument/didOpen", {
+                        textDocument: {
+                            uri: getUri(),
+                            languageId: language,
+                            version: editor.getModel().getVersionId(),
+                            text: editor.getModel().getValue()
                         }
                     });
                 }
