@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #container {
+            height: 100%;
+        }
+
+        #container.loading {
+            background-color: #backcolor;
+            font-family: #loadingfont;
+            font-size: #loadingfontsize;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="container" class="loading"><span id="loading">Loading Monaco Editor...</span></div>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.55.0-dev-20251022/dev/vs/loader.js"></script>
+    <script>
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.55.0-dev-20251022/dev/vs' } });
+    </script>
+    <script>
+        require(['vs/editor/editor.main'], async function () {
+            // Get the value and language that have been set in .NET before the editor has loaded
+            const value = await window.chrome.webview.hostObjects.monacoBridge.GetInitValue();
+            const language = await window.chrome.webview.hostObjects.monacoBridge.GetLanguage();
+
+            window.editor = monaco.editor.create(document.getElementById('container'), {
+                value: value,
+                language: language
+            });
+
+            editor.onDidChangeModelLanguageConfiguration(() => {
+                // Editor has loaded so remove loading notification
+                document.getElementById('container').classList.remove('loading');
+                const loading = document.getElementById('loading');
+                loading.parentElement.removeChild(loading);
+            });
+        });
+    </script>
+</body>
+</html>
