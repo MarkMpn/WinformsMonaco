@@ -118,7 +118,7 @@
                         triggerCharacters: triggerChars,
                         provideCompletionItems: async function (model, position, context, token) {
                             const result = await sendLspRequest("textDocument/completion", {
-                                textDocument: { uri },
+                                textDocument: { uri: model.uri.toString() },
                                 position: {
                                     line: position.lineNumber - 1,
                                     character: position.column - 1
@@ -264,13 +264,13 @@
                     if (method === "textDocument/publishDiagnostics") {
                         const { uri, diagnostics } = params;
 
-                        const model = monaco.editor.getModels().find(m => m.uri.toString() === uri);
+                        const model = monaco.editor.getModel(monaco.Uri.parse(uri));
                         if (!model) return;
 
                         monaco.editor.setModelMarkers(
                             model,
                             'lsp',
-                            params.diagnostics.map(d => ({
+                            diagnostics.map(d => ({
                                 startLineNumber: d.range.start.line + 1,
                                 startColumn: d.range.start.character + 1,
                                 endLineNumber: d.range.end.line + 1,
