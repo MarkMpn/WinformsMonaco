@@ -35,7 +35,7 @@
             const language = await window.chrome.webview.hostObjects.monacoBridge.GetLanguage();
             const uri = await window.chrome.webview.hostObjects.monacoBridge.GetUri();
 
-            const model = monaco.editor.createModel(value, language, uri);
+            const model = monaco.editor.createModel(value, language, monaco.Uri.parse(uri));
             window.editor = monaco.editor.create(document.getElementById('container'), {
                 model: model
             });
