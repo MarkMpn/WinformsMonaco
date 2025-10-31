@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
+using System.Text;
 using System.Text.Json;
+using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
@@ -22,7 +24,7 @@ public class Monaco : Control
     {
         _webView = new WebView2
         {
-            Dock = DockStyle.Fill
+            Dock = DockStyle.Fill,
         };
         Controls.Add(_webView);
 
@@ -42,22 +44,10 @@ public class Monaco : Control
             _webView.CoreWebView2.AddHostObjectToScript("monacoBridge", _bridge);
             _webView.CoreWebView2.AddHostObjectToScript("lspTransport", _lspTransport);
 
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("WinformsMonaco.Resources.monaco.html"))
-            using (var reader = new StreamReader(stream))
-            {
-                var html = reader.ReadToEnd();
-                html = html.Replace("#backcolor", $"#{BackColor.R:X2}{BackColor.G:X2}{BackColor.B:X2}");
-                html = html.Replace("#loadingfontsize", $"{Font.Size}pt");
-                html = html.Replace("#loadingfont", $"'{Font.Name}'");
+            _webView.CoreWebView2.AddWebResourceRequestedFilter("monaco://*", CoreWebView2WebResourceContext.All, CoreWebView2WebResourceRequestSourceKinds.All);
+            _webView.CoreWebView2.WebResourceRequested += LoadResourceFile;
 
-#if DEBUG
-                var url = Path.ChangeExtension(Path.GetTempFileName(), ".html");
-                File.WriteAllText(url, html);
-                _webView.CoreWebView2.Navigate(url);
-#else
-                _webView.NavigateToString(html);
-#endif
-            }
+            _webView.CoreWebView2.Navigate("monaco://monaco.html");
         };
 
         _webView.NavigationCompleted += (s, e) =>
@@ -65,7 +55,60 @@ public class Monaco : Control
             _navigationCompleted = true;
         };
 
-        _ = _webView.EnsureCoreWebView2Async();
+        var customSchemeRegistrations = new List<CoreWebView2CustomSchemeRegistration>
+        {
+            new CoreWebView2CustomSchemeRegistration("monaco")
+            {
+                AllowedOrigins = { "*" },
+                TreatAsSecure = true,
+            }
+        };
+        var envOptions = new CoreWebView2EnvironmentOptions(customSchemeRegistrations: customSchemeRegistrations);
+        var env = CoreWebView2Environment.CreateAsync(null, null, envOptions).ConfigureAwait(false).GetAwaiter().GetResult();
+
+        _ = _webView.EnsureCoreWebView2Async(env).ConfigureAwait(false);
+    }
+
+    private void LoadResourceFile(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
+    {
+        if (!e.Request.Uri.StartsWith("monaco://"))
+            return;
+
+        var resourceName = e.Request.Uri.Replace("monaco://", "WinformsMonaco.Resources.");
+
+        using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+        {
+            if (stream == null)
+                return;
+
+            if (e.Request.Uri == "monaco://monaco.html")
+            {
+                using (var reader = new StreamReader(stream))
+                {
+                    var content = reader.ReadToEnd();
+
+                    content = content.Replace("#backcolor", $"#{BackColor.R:X2}{BackColor.G:X2}{BackColor.B:X2}");
+                    content = content.Replace("#loadingfontsize", $"{Font.Size}pt");
+                    content = content.Replace("#loadingfont", $"'{Font.Name}'");
+
+                    var response = _webView.CoreWebView2.Environment.CreateWebResourceResponse(
+                        new MemoryStream(Encoding.UTF8.GetBytes(content)),
+                        200,
+                        "OK",
+                        "Content-Type: text/html");
+                    e.Response = response;
+                }
+            }
+            else
+            {
+                var response = _webView.CoreWebView2.Environment.CreateWebResourceResponse(
+                    stream,
+                    200,
+                    "OK",
+                    "Content-Type: application/javascript");
+                e.Response = response;
+            }
+        }
     }
 
     public override string Text
