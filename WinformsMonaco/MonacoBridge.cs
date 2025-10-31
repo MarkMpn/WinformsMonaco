@@ -29,4 +29,9 @@ public class MonacoBridge
     {
         return _monaco.Uri;
     }
+
+    public bool GetMinimapVisible()
+    {
+        return _monaco.MinimapVisible;
+    }
 }

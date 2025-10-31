@@ -29,16 +29,18 @@
         private void InitializeComponent()
         {
             topPanel = new Panel();
+            showMinimapCheckBox = new CheckBox();
+            addLspButton = new Button();
             setTextButton = new Button();
             getTextButton = new Button();
             setLangButton = new Button();
             bodyPanel = new Panel();
-            addLspButton = new Button();
             topPanel.SuspendLayout();
             SuspendLayout();
             // 
             // topPanel
             // 
+            topPanel.Controls.Add(showMinimapCheckBox);
             topPanel.Controls.Add(addLspButton);
             topPanel.Controls.Add(setTextButton);
             topPanel.Controls.Add(getTextButton);
@@ -46,8 +48,29 @@
             topPanel.Dock = DockStyle.Top;
             topPanel.Location = new Point(0, 0);
             topPanel.Name = "topPanel";
-            topPanel.Size = new Size(800, 52);
+            topPanel.Size = new Size(800, 73);
             topPanel.TabIndex = 0;
+            // 
+            // showMinimapCheckBox
+            // 
+            showMinimapCheckBox.AutoSize = true;
+            showMinimapCheckBox.Location = new Point(12, 41);
+            showMinimapCheckBox.Name = "showMinimapCheckBox";
+            showMinimapCheckBox.Size = new Size(106, 19);
+            showMinimapCheckBox.TabIndex = 4;
+            showMinimapCheckBox.Text = "Show Minimap";
+            showMinimapCheckBox.UseVisualStyleBackColor = true;
+            showMinimapCheckBox.CheckedChanged += showMinimapCheckBox_CheckedChanged;
+            // 
+            // addLspButton
+            // 
+            addLspButton.Location = new Point(255, 12);
+            addLspButton.Name = "addLspButton";
+            addLspButton.Size = new Size(75, 23);
+            addLspButton.TabIndex = 3;
+            addLspButton.Text = "Add LSP";
+            addLspButton.UseVisualStyleBackColor = true;
+            addLspButton.Click += addLspButton_Click;
             // 
             // setTextButton
             // 
@@ -82,20 +105,10 @@
             // bodyPanel
             // 
             bodyPanel.Dock = DockStyle.Fill;
-            bodyPanel.Location = new Point(0, 52);
+            bodyPanel.Location = new Point(0, 73);
             bodyPanel.Name = "bodyPanel";
-            bodyPanel.Size = new Size(800, 398);
+            bodyPanel.Size = new Size(800, 377);
             bodyPanel.TabIndex = 0;
-            // 
-            // addLspButton
-            // 
-            addLspButton.Location = new Point(255, 12);
-            addLspButton.Name = "addLspButton";
-            addLspButton.Size = new Size(75, 23);
-            addLspButton.TabIndex = 3;
-            addLspButton.Text = "Add LSP";
-            addLspButton.UseVisualStyleBackColor = true;
-            addLspButton.Click += addLspButton_Click;
             // 
             // Form1
             // 
@@ -107,6 +120,7 @@
             Name = "Form1";
             Text = "Form1";
             topPanel.ResumeLayout(false);
+            topPanel.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -118,5 +132,6 @@
         private Button setLangButton;
         private Panel bodyPanel;
         private Button addLspButton;
+        private CheckBox showMinimapCheckBox;
     }
 }

@@ -8,6 +8,9 @@ using StreamJsonRpc;
 
 namespace MarkMpn.WinformsMonaco;
 
+/// <summary>
+/// Hosts the Monaco text editor control in a Windows Forms control
+/// </summary>
 public class Monaco : Control
 {
     private readonly WebView2 _webView;
@@ -19,7 +22,11 @@ public class Monaco : Control
     private string? _text;
     private string? _language;
     private string? _uri;
+    private bool _minimapVisible = true;
 
+    /// <summary>
+    /// Creates a new Monaco text editor control
+    /// </summary>
     public Monaco()
     {
         _webView = new WebView2
@@ -113,6 +120,9 @@ public class Monaco : Control
         }
     }
 
+    /// <summary>
+    /// Returns or sets the current text in the editor
+    /// </summary>
     public override string Text
     {
         get
@@ -135,6 +145,9 @@ public class Monaco : Control
         return value;
     }
 
+    /// <summary>
+    /// Returns the currently selected text in the editor
+    /// </summary>
     public string SelectedText
     {
         get
@@ -143,6 +156,9 @@ public class Monaco : Control
         }
     }
 
+    /// <summary>
+    /// Returns or sets the language the editor uses for features such as syntax highlighting
+    /// </summary>
     public string Language
     {
         get => _language ?? string.Empty;
@@ -155,6 +171,12 @@ public class Monaco : Control
         }
     }
 
+    /// <summary>
+    /// Returns or sets the URI that identifies the document in the editor
+    /// </summary>
+    /// <remarks>
+    /// This value is used by language servers to identify the document.
+    /// </remarks>
     public string Uri
     {
         get => _uri ?? $"inmemory://model/{GetHashCode()}.{Language}";
@@ -164,6 +186,21 @@ public class Monaco : Control
 
             if (_ready)
                 _webView.ExecuteScriptAsync($"newModel({JsonSerializer.Serialize(_uri)}, {JsonSerializer.Serialize(Language)}, {JsonSerializer.Serialize(Text)});").ExecuteSync();
+        }
+    }
+
+    /// <summary>
+    /// Shows or hides the minimap view on the right hand side of the editor
+    /// </summary>
+    public bool MinimapVisible
+    {
+        get => _minimapVisible;
+        set
+        {
+            _minimapVisible = value;
+
+            if (_ready)
+                _webView.ExecuteScriptAsync($"showMinimap({JsonSerializer.Serialize(value)});").ExecuteSync();
         }
     }
 
@@ -185,9 +222,15 @@ public class Monaco : Control
         e.Graphics.DrawString("Loading Monaco Editor...", Font, SystemBrushes.ControlText, e.ClipRectangle, sf);
     }
 
-    public void RegisterLanguageServerProvider(string language, Stream clientStream)
+    /// <summary>
+    /// Adds a Language Server Protocol client to provide additional language features to the editor.
+    /// </summary>
+    /// <param name="language">The language that the LSP client should be used for</param>
+    /// <param name="sendingStream">The stream used to transmit messages to the LSP server</param>
+    /// <param name="receivingStream">The stream used to receive messages from the LSP server</param>
+    public void RegisterLSPClient(string language, Stream sendingStream, Stream receivingStream)
     {
-        var rpcClient = new JsonRpc(clientStream, clientStream);
+        var rpcClient = new JsonRpc(sendingStream, receivingStream);
 
         // Forward any notifications on to the javascript
         rpcClient.AddLocalRpcMethod("textDocument/publishDiagnostics", (Action<JObject>)((parameters) =>
@@ -200,10 +243,7 @@ public class Monaco : Control
 
         rpcClient.StartListening();
 
-        rpcClient.TraceSource.Switch.Level = System.Diagnostics.SourceLevels.All;
-        rpcClient.TraceSource.Listeners.Add(new System.Diagnostics.ConsoleTraceListener());
-
-        _lspTransport.RegisterLanguageServerProvider(language, rpcClient);
+        _lspTransport.RegisterLSPClient(language, rpcClient);
         _webView.ExecuteScriptAsync($"registerLsp({JsonSerializer.Serialize(language)});").ExecuteSync();
     }
 

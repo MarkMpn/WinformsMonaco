@@ -30,6 +30,10 @@ require(['vs/editor/editor.main'], async function () {
         await registerLspHandlers(editor, language);
     };
 
+    window.showMinimap = function(show) {
+        editor.updateOptions({ minimap: { enabled: show } });
+    };
+
     window.lspClient = {
         handleNotification: function (method, params) {
             if (method === "textDocument/publishDiagnostics") {

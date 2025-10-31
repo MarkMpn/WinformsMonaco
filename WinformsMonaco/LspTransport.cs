@@ -26,7 +26,7 @@ public class LspTransport
         _languageClients = new Dictionary<string, JsonRpc>();
     }
 
-    internal void RegisterLanguageServerProvider(string language, JsonRpc rpcClient)
+    internal void RegisterLSPClient(string language, JsonRpc rpcClient)
     {
         _languageClients[language] = rpcClient;
     }

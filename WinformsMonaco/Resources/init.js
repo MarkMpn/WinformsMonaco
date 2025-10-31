@@ -3,11 +3,15 @@
     const value = await window.chrome.webview.hostObjects.monacoBridge.GetInitValue();
     const language = await window.chrome.webview.hostObjects.monacoBridge.GetLanguage();
     const uri = await window.chrome.webview.hostObjects.monacoBridge.GetUri();
+    const minimapVisible = await window.chrome.webview.hostObjects.monacoBridge.GetMinimapVisible();
 
     const model = monaco.editor.createModel(value, language, monaco.Uri.parse(uri));
 
     const editor = monaco.editor.create(document.getElementById('container'), {
-        model: model
+        model: model,
+        minimap: {
+            enabled: minimapVisible
+        }
     });
 
     editor.onDidChangeModelLanguageConfiguration(() => {

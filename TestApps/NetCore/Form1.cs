@@ -19,6 +19,8 @@ namespace NetCore
                 Language = "javascript"
             };
             bodyPanel.Controls.Add(_monaco);
+
+            showMinimapCheckBox.Checked = _monaco.MinimapVisible;
         }
 
         private void setTextButton_Click(object sender, EventArgs e)
@@ -40,7 +42,12 @@ namespace NetCore
         {
             var (clientStream, serverStream) = FullDuplexStream.CreatePair();
             var rpcServer = new LspServer(serverStream);
-            _monaco.RegisterLanguageServerProvider(_monaco.Language, clientStream);
+            _monaco.RegisterLSPClient(_monaco.Language, clientStream, clientStream);
+        }
+
+        private void showMinimapCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            _monaco.MinimapVisible = showMinimapCheckBox.Checked;
         }
     }
 }
