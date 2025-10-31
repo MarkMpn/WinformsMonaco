@@ -9,11 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\monaco.html" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\monaco.html" />
+    <EmbeddedResource Include="Resources\**\*.*" />
   </ItemGroup>
 
   <ItemGroup>

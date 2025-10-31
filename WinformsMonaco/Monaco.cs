@@ -44,10 +44,10 @@ public class Monaco : Control
             _webView.CoreWebView2.AddHostObjectToScript("monacoBridge", _bridge);
             _webView.CoreWebView2.AddHostObjectToScript("lspTransport", _lspTransport);
 
-            _webView.CoreWebView2.AddWebResourceRequestedFilter("monaco://*", CoreWebView2WebResourceContext.All, CoreWebView2WebResourceRequestSourceKinds.All);
+            _webView.CoreWebView2.AddWebResourceRequestedFilter("monaco://monaco/*", CoreWebView2WebResourceContext.All, CoreWebView2WebResourceRequestSourceKinds.All);
             _webView.CoreWebView2.WebResourceRequested += LoadResourceFile;
 
-            _webView.CoreWebView2.Navigate("monaco://monaco.html");
+            _webView.CoreWebView2.Navigate("monaco://monaco/index.html");
         };
 
         _webView.NavigationCompleted += (s, e) =>
@@ -61,6 +61,7 @@ public class Monaco : Control
             {
                 AllowedOrigins = { "*" },
                 TreatAsSecure = true,
+                HasAuthorityComponent = true,
             }
         };
         var envOptions = new CoreWebView2EnvironmentOptions(customSchemeRegistrations: customSchemeRegistrations);
@@ -71,43 +72,44 @@ public class Monaco : Control
 
     private void LoadResourceFile(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
     {
-        if (!e.Request.Uri.StartsWith("monaco://"))
+        if (!e.Request.Uri.StartsWith("monaco://monaco/"))
             return;
 
-        var resourceName = e.Request.Uri.Replace("monaco://", "WinformsMonaco.Resources.");
+        var resourceName = e.Request.Uri.Replace("monaco://monaco/", "WinformsMonaco.Resources.").Replace('/', '.');
 
-        using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
+        // Don't dispose of the stream - it needs to be open after this method returns so the data
+        // is available to the WebView2 control to return the response.
+        var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+        
+        if (stream == null)
+            return;
+
+        if (e.Request.Uri == "monaco://monaco/index.html")
         {
-            if (stream == null)
-                return;
-
-            if (e.Request.Uri == "monaco://monaco.html")
+            using (var reader = new StreamReader(stream))
             {
-                using (var reader = new StreamReader(stream))
-                {
-                    var content = reader.ReadToEnd();
+                var content = reader.ReadToEnd();
 
-                    content = content.Replace("#backcolor", $"#{BackColor.R:X2}{BackColor.G:X2}{BackColor.B:X2}");
-                    content = content.Replace("#loadingfontsize", $"{Font.Size}pt");
-                    content = content.Replace("#loadingfont", $"'{Font.Name}'");
+                content = content.Replace("#backcolor", $"#{BackColor.R:X2}{BackColor.G:X2}{BackColor.B:X2}");
+                content = content.Replace("#loadingfontsize", $"{Font.Size}pt");
+                content = content.Replace("#loadingfont", $"'{Font.Name}'");
 
-                    var response = _webView.CoreWebView2.Environment.CreateWebResourceResponse(
-                        new MemoryStream(Encoding.UTF8.GetBytes(content)),
-                        200,
-                        "OK",
-                        "Content-Type: text/html");
-                    e.Response = response;
-                }
-            }
-            else
-            {
                 var response = _webView.CoreWebView2.Environment.CreateWebResourceResponse(
-                    stream,
+                    new MemoryStream(Encoding.UTF8.GetBytes(content)),
                     200,
                     "OK",
-                    "Content-Type: application/javascript");
+                    "Content-Type: text/html");
                 e.Response = response;
             }
+        }
+        else
+        {
+            var response = _webView.CoreWebView2.Environment.CreateWebResourceResponse(
+                stream,
+                200,
+                "OK",
+                "Content-Type: application/javascript");
+            e.Response = response;
         }
     }
 
@@ -115,12 +117,12 @@ public class Monaco : Control
     {
         get
         {
-            return _text ?? JsonSerializer.Deserialize<string>(_webView.ExecuteScriptAsync("editor.getValue()").ExecuteSync()) ?? string.Empty;
+            return _text ?? JsonSerializer.Deserialize<string>(_webView.ExecuteScriptAsync("getValue()").ExecuteSync()) ?? string.Empty;
         }
         set
         {
             if (_ready)
-                _webView.ExecuteScriptAsync($"editor.setValue({JsonSerializer.Serialize(value)});").ExecuteSync();
+                _webView.ExecuteScriptAsync($"setValue({JsonSerializer.Serialize(value)});").ExecuteSync();
             else
                 _text = value;
         }
@@ -137,7 +139,7 @@ public class Monaco : Control
     {
         get
         {
-            return JsonSerializer.Deserialize<string>(_webView.ExecuteScriptAsync("editor.getModel().getValueInRange(editor.getSelection())").ExecuteSync()) ?? string.Empty;
+            return JsonSerializer.Deserialize<string>(_webView.ExecuteScriptAsync("getSelectedText()").ExecuteSync()) ?? string.Empty;
         }
     }
 
@@ -149,7 +151,7 @@ public class Monaco : Control
             _language = value;
 
             if (_ready)
-                _webView.ExecuteScriptAsync($"monaco.editor.setModelLanguage(editor.getModel(), {JsonSerializer.Serialize(value)});").ExecuteSync();
+                _webView.ExecuteScriptAsync($"setLanguage({JsonSerializer.Serialize(value)});").ExecuteSync();
         }
     }
 
