@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Runtime.InteropServices;
 
-namespace WinformsMonaco;
+namespace MarkMpn.WinformsMonaco;
 
 [ClassInterface(ClassInterfaceType.AutoDual)]
 [ComVisible(true)]

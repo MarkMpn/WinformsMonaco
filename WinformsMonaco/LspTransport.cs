@@ -10,50 +10,49 @@ using Newtonsoft.Json;
 using StreamJsonRpc;
 using StreamJsonRpc.Protocol;
 
-namespace WinformsMonaco
+namespace MarkMpn.WinformsMonaco;
+
+[ClassInterface(ClassInterfaceType.AutoDual)]
+[ComVisible(true)]
+[Browsable(false)]
+public class LspTransport
 {
-    [ClassInterface(ClassInterfaceType.AutoDual)]
-    [ComVisible(true)]
-    [Browsable(false)]
-    public class LspTransport
+    private readonly Monaco _monaco;
+    private readonly Dictionary<string, JsonRpc> _languageClients;
+
+    public LspTransport(Monaco monaco)
     {
-        private readonly Monaco _monaco;
-        private readonly Dictionary<string, JsonRpc> _languageClients;
+        _monaco = monaco;
+        _languageClients = new Dictionary<string, JsonRpc>();
+    }
 
-        public LspTransport(Monaco monaco)
+    internal void RegisterLanguageServerProvider(string language, JsonRpc rpcClient)
+    {
+        _languageClients[language] = rpcClient;
+    }
+
+    public async Task<string> SendRequest(string jsonRpcMessage)
+    {
+        var language = _monaco.Language;
+        if (!_languageClients.TryGetValue(language, out var rpcClient))
         {
-            _monaco = monaco;
-            _languageClients = new Dictionary<string, JsonRpc>();
+            throw new InvalidOperationException($"No LSP server registered for language '{language}'.");
         }
 
-        internal void RegisterLanguageServerProvider(string language, JsonRpc rpcClient)
+        var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
+        var response = await rpcClient.InvokeWithParameterObjectAsync<object>(message.Method, message.Arguments).ConfigureAwait(false);
+        return JsonConvert.SerializeObject(response);
+    }
+
+    public async Task SendNotification(string jsonRpcMessage)
+    {
+        var language = _monaco.Language;
+        if (!_languageClients.TryGetValue(language, out var rpcClient))
         {
-            _languageClients[language] = rpcClient;
+            throw new InvalidOperationException($"No LSP server registered for language '{language}'.");
         }
 
-        public async Task<string> SendRequest(string jsonRpcMessage)
-        {
-            var language = _monaco.Language;
-            if (!_languageClients.TryGetValue(language, out var rpcClient))
-            {
-                throw new InvalidOperationException($"No LSP server registered for language '{language}'.");
-            }
-
-            var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
-            var response = await rpcClient.InvokeWithParameterObjectAsync<object>(message.Method, message.Arguments).ConfigureAwait(false);
-            return JsonConvert.SerializeObject(response);
-        }
-
-        public async Task SendNotification(string jsonRpcMessage)
-        {
-            var language = _monaco.Language;
-            if (!_languageClients.TryGetValue(language, out var rpcClient))
-            {
-                throw new InvalidOperationException($"No LSP server registered for language '{language}'.");
-            }
-
-            var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
-            await rpcClient.NotifyWithParameterObjectAsync(message.Method, message.Arguments).ConfigureAwait(false);
-        }
+        var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
+        await rpcClient.NotifyWithParameterObjectAsync(message.Method, message.Arguments).ConfigureAwait(false);
     }
 }

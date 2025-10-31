@@ -1,7 +1,6 @@
 using LSP;
 using Nerdbank.Streams;
-using StreamJsonRpc;
-using WinformsMonaco;
+using MarkMpn.WinformsMonaco;
 
 namespace NetCore
 {

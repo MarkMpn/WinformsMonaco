@@ -6,7 +6,7 @@ using Microsoft.Web.WebView2.WinForms;
 using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 
-namespace WinformsMonaco;
+namespace MarkMpn.WinformsMonaco;
 
 public class Monaco : Control
 {
@@ -75,7 +75,7 @@ public class Monaco : Control
         if (!e.Request.Uri.StartsWith("monaco://monaco/"))
             return;
 
-        var resourceName = e.Request.Uri.Replace("monaco://monaco/", "WinformsMonaco.Resources.").Replace('/', '.');
+        var resourceName = e.Request.Uri.Replace("monaco://monaco/", "MarkMpn.WinformsMonaco.Resources.").Replace('/', '.');
 
         // Don't dispose of the stream - it needs to be open after this method returns so the data
         // is available to the WebView2 control to return the response.

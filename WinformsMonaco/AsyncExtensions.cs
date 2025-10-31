@@ -1,4 +1,4 @@
-﻿namespace WinformsMonaco;
+﻿namespace MarkMpn.WinformsMonaco;
 
 static class AsyncExtensions
 {

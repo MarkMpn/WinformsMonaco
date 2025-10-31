@@ -84,9 +84,9 @@
       <Project>{37afb87e-2045-4703-8a9d-f4f4e555921e}</Project>
       <Name>LSP</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\WinformsMonaco\WinformsMonaco.csproj">
+    <ProjectReference Include="..\..\WinformsMonaco\MarkMpn.WinformsMonaco.csproj">
       <Project>{69c08114-5714-434a-85ef-4a748b1b0653}</Project>
-      <Name>WinformsMonaco</Name>
+      <Name>MarkMpn.WinformsMonaco</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
