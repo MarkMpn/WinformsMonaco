@@ -39,8 +39,27 @@ public class LspTransport
             return null;
 
         var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
-        var response = await rpcClient.InvokeWithParameterObjectAsync<object>(message.Method, message.Arguments).ConfigureAwait(false);
-        return JsonConvert.SerializeObject(response);
+
+        try
+        {
+            var response = await rpcClient.InvokeWithParameterObjectAsync<object>(message.Method, message.Arguments).ConfigureAwait(false);
+            return JsonConvert.SerializeObject(response);
+        }
+        catch (RemoteRpcException ex)
+        {
+            var error = new JsonRpcError
+            {
+                Error = new JsonRpcError.ErrorDetail
+                {
+                    Code = ex.ErrorCode ?? JsonRpcErrorCode.InternalError,
+                    Data = ex.ErrorData,
+                    Message = ex.Message,
+                },
+                RequestId = message.RequestId,
+                Version = message.Version,
+            };
+            return JsonConvert.SerializeObject(error);
+        }
     }
 
     public async Task SendNotification(string jsonRpcMessage)

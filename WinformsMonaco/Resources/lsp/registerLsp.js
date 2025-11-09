@@ -162,10 +162,10 @@ export const registerLspHandlers = async function (editor, language) {
         // Send the initial open notification
         await sendLspNotification("textDocument/didOpen", {
             textDocument: {
-                uri: model.uri.toString(),
+                uri: editor.getModel().uri.toString(),
                 languageId: language,
-                version: model.getVersionId(),
-                text: model.getValue()
+                version: editor.getModel().getVersionId(),
+                text: editor.getModel().getValue()
             }
         });
     }
