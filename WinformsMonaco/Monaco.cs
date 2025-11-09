@@ -227,12 +227,9 @@ public class Monaco : Control
     /// Adds a Language Server Protocol client to provide additional language features to the editor.
     /// </summary>
     /// <param name="language">The language that the LSP client should be used for</param>
-    /// <param name="sendingStream">The stream used to transmit messages to the LSP server</param>
-    /// <param name="receivingStream">The stream used to receive messages from the LSP server</param>
-    public void RegisterLSPClient(string language, Stream sendingStream, Stream receivingStream)
+    /// <param name="rpcClient">The client to communicate with the LSP server with</param>
+    public void RegisterLSPClient(string language, JsonRpc rpcClient)
     {
-        var rpcClient = new JsonRpc(sendingStream, receivingStream);
-
         // Forward any notifications on to the javascript
         rpcClient.AddLocalRpcMethod("textDocument/publishDiagnostics", (Action<JObject>)((parameters) =>
         {

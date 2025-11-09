@@ -1,6 +1,7 @@
 using LSP;
 using Nerdbank.Streams;
 using MarkMpn.WinformsMonaco;
+using StreamJsonRpc;
 
 namespace NetCore
 {
@@ -42,7 +43,8 @@ namespace NetCore
         {
             var (clientStream, serverStream) = FullDuplexStream.CreatePair();
             var rpcServer = new LspServer(serverStream);
-            _monaco.RegisterLSPClient(_monaco.Language, clientStream, clientStream);
+            var rpcClient = new JsonRpc(clientStream);
+            _monaco.RegisterLSPClient(_monaco.Language, rpcClient);
         }
 
         private void showMinimapCheckBox_CheckedChanged(object sender, EventArgs e)
