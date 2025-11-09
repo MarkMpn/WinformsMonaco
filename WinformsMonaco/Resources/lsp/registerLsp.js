@@ -171,4 +171,5 @@ export const registerLspHandlers = async function (editor, language) {
     }
 
     await sendLspNotification("initialized", {});
+    await sendLspNotification("workspace/didChangeConfiguration", { settings: {} });
 };

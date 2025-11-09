@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
@@ -35,9 +36,7 @@ public class LspTransport
     {
         var language = _monaco.Language;
         if (!_languageClients.TryGetValue(language, out var rpcClient))
-        {
-            throw new InvalidOperationException($"No LSP server registered for language '{language}'.");
-        }
+            return null;
 
         var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
         var response = await rpcClient.InvokeWithParameterObjectAsync<object>(message.Method, message.Arguments).ConfigureAwait(false);
@@ -46,13 +45,16 @@ public class LspTransport
 
     public async Task SendNotification(string jsonRpcMessage)
     {
+        var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
+        await SendNotificationInternal(message.Method, message.Arguments).ConfigureAwait(false);
+    }
+
+    internal async Task SendNotificationInternal(string message, object arguments)
+    {
         var language = _monaco.Language;
         if (!_languageClients.TryGetValue(language, out var rpcClient))
-        {
-            throw new InvalidOperationException($"No LSP server registered for language '{language}'.");
-        }
+            return;
 
-        var message = JsonConvert.DeserializeObject<JsonRpcRequest>(jsonRpcMessage);
-        await rpcClient.NotifyWithParameterObjectAsync(message.Method, message.Arguments).ConfigureAwait(false);
+        await rpcClient.NotifyWithParameterObjectAsync(message, arguments).ConfigureAwait(false);
     }
 }

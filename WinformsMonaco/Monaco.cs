@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text;
 using System.Text.Json;
+using System.Windows.Forms;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using Newtonsoft.Json.Linq;
@@ -245,6 +246,16 @@ public class Monaco : Control
 
         _lspTransport.RegisterLSPClient(language, rpcClient);
         _webView.ExecuteScriptAsync($"registerLsp({JsonSerializer.Serialize(language)});").ExecuteSync();
+        _webView.GotFocus += (s, e) =>
+        {
+            _lspTransport.SendNotificationInternal("textDocument/didFocus", new { textDocument = new { uri = Uri } }).ExecuteSync();
+        };
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        _lspTransport.SendNotificationInternal("textDocument/didClose", new { textDocument = new { uri = Uri } }).ExecuteSync();
+        base.Dispose(disposing);
     }
 
     private void InvokeIfRequired(Action action)
